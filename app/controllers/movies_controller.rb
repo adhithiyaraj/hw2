@@ -1,5 +1,9 @@
 class MoviesController < ApplicationController
 
+  def movie_params
+    params.require(:movie).permit(:title, :rating, :description, :release_date)
+  end
+
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
@@ -7,8 +11,53 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    
+    #@movies = Movie.all
+    #column = params[:sort_by] || session[:sort_by]
+    #if column == 'title'
+    #  @movies = @movies.sort_by{|x| x[:title]}
+    #end
+    #if column == 'release_date'
+    #  @movies = @movies.sort_by{|x| x[:release_date]}
+    #end
+    
+    #@all_ratings = Movie.all_ratings
+    #if params[:ratings]
+    #  @movies = Movie.where(:rating => params[:ratings].keys)
+    #else
+    #  @movies = Movie.all
+    #end
+    
+    #case params[:sort_by]
+    #when 'title'
+    #  @movies = @movies.sort_by do |movie|
+    #    movie[:title]
+    #  end
+    #when 'release_date' 
+    #  @movies = @movies.sort_by do |movie|
+    #    movie[:release_date]
+    #  end
+    #end
+    
+     @all_ratings = Movie.all_ratings
+    unless session[:ratings]
+      session[:ratings] = @all_ratings
+    else
+      if params[:ratings] != session[:ratings] && params[:ratings]
+        session[:ratings] = params[:ratings]
+      end
+      @movies = Movie.where(:rating => session[:ratings].keys)
+    end
+    if params[:sort_by] || session[:sort_by]
+      if params[:sort_by] != session[:sort_by] && params[:sort_by]
+        session[:sort_by] = params[:sort_by]
+      end
+      @movies = @movies.sort_by do |movie|
+        movie[session[:sort_by]]
+      end
+    end
   end
+    
 
   def new
     # default: render 'new' template
@@ -38,10 +87,4 @@ class MoviesController < ApplicationController
     redirect_to movies_path
   end
 
-  private
-  # Making "internal" methods private is not required, but is a common practice.
-  # This helps make clear which methods respond to requests, and which ones do not.
-  def movie_params
-    params.require(:movie).permit(:title, :rating, :description, :release_date)
-  end
 end
