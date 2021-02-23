@@ -11,54 +11,40 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @movies = Movie.all
+    @all_ratings = Movie.all_ratings
+    redirect = 0
     
-    #@movies = Movie.all
-    #column = params[:sort_by] || session[:sort_by]
-    #if column == 'title'
-    #  @movies = @movies.sort_by{|x| x[:title]}
-    #end
-    #if column == 'release_date'
-    #  @movies = @movies.sort_by{|x| x[:release_date]}
-    #end
-    
-    #@all_ratings = Movie.all_ratings
-    #if params[:ratings]
-    #  @movies = Movie.where(:rating => params[:ratings].keys)
-    #else
-    #  @movies = Movie.all
-    #end
-    
-    #case params[:sort_by]
-    #when 'title'
-    #  @movies = @movies.sort_by do |movie|
-    #    movie[:title]
-    #  end
-    #when 'release_date' 
-    #  @movies = @movies.sort_by do |movie|
-    #    movie[:release_date]
-    #  end
-    #end
-    
-     @all_ratings = Movie.all_ratings
-    unless session[:ratings]
-      session[:ratings] = @all_ratings
-    else
-      if params[:ratings] != session[:ratings] && params[:ratings]
-        session[:ratings] = params[:ratings]
-      end
-      @movies = Movie.where(:rating => session[:ratings].keys)
+    if params[:sort_asc]
+      session[:sort_asc] = params[:sort_asc]
+      @sort_asc = params[:sort_asc]
+    elsif session[:sort_asc]
+      redirect = 1
+      @sort_asc = session[:sort_asc]
     end
-    if params[:sort_by] || session[:sort_by]
-      if params[:sort_by] != session[:sort_by] && params[:sort_by]
-        session[:sort_by] = params[:sort_by]
-      end
-      @movies = @movies.sort_by do |movie|
-        movie[session[:sort_by]]
-      end
+    
+    @movies = @movies.order(@sort_asc)
+
+    @checked_ratings = @all_ratings
+    
+    if params[:ratings]
+      session[:ratings] = params[:ratings]
+      @checked_ratings = params[:ratings].keys
+    elsif session[:ratings]
+      redirect = 1
+      @checked_ratings = session[:ratings].keys
+    end
+    
+    @movies = @movies.where(rating: @checked_ratings)
+
+  
+    if redirect == 1
+      flash.keep
+      redirect_to movies_path(sort_asc: session[:sort_asc] , ratings: session[:ratings]) 
+
     end
   end
     
-
   def new
     # default: render 'new' template
   end

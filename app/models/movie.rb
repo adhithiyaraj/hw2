@@ -1,6 +1,7 @@
 class Movie < ActiveRecord::Base
-    #defining a method to select distinct movie ratings
     def self.all_ratings
-        Movie.distinct.pluck(:rating)
+        ratings = Array.new
+        self.select("rating").uniq.each {|x| ratings.push(x.rating)}
+        ratings.sort.uniq
     end
 end
